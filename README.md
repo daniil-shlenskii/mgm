@@ -115,4 +115,4 @@ Times cover MGM training after initialization (Appendix C.1). On ImageNet 512×5
 
 ## Licenses
 
-See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md). The root [LICENSE.txt](LICENSE.txt) applies to Apache-2.0 components; the NVIDIA-derived EDM/EDM2 components keep their CC BY-NC-SA 4.0 terms.
+MGM release code is licensed under [Apache 2.0](LICENSE.txt). Components derived from NVIDIA EDM and EDM2 retain their [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) terms. See [file licenses and attribution](THIRD_PARTY_LICENSES.md) for individual files and figures from the paper.
