@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  At the midpoint, the velocity field vanishes exactly when the generated and real distributions match.
+  At the midpoint, the Flow Matching velocity vanishes exactly when the generated and real distributions match.
   A random time flip extends this symmetry to other interpolation times.
 </p>
 
