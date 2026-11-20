@@ -66,6 +66,8 @@ Pretrained checkpoints, FID reference statistics, the Inception network and the 
 
 ## CIFAR-10 denoising warmup
 
+To skip the warmup and start MGM training directly, pass the URL of NVIDIA's [pretrained unconditional CIFAR-10 DDPM++ checkpoint](https://nvlabs-fi-cdn.nvidia.com/edm/pretrained/edm-cifar10-32x32-uncond-vp.pkl) to `train.py` via `--checkpoint`. To reproduce the paper's CIFAR-10 result (FID-50k 2.27), use the 50K-kimg warmup below.
+
 ```bash
 torchrun --standalone --nproc_per_node=8 warmup_cifar.py \
     --data=datasets/cifar10-32x32.zip --outdir=runs/warmup --duration-kimg=50000
