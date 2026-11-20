@@ -1,6 +1,10 @@
-# Midpoint Generative Models
+# Midpoint Generative Models [[arXiv](https://arxiv.org/abs/2605.29920)] [[NeurIPS 2026](https://neurips.cc/virtual/2026/poster/154433)]
 
-One-step MGM training and sampling for the EDM and EDM2 backbones used in *Midpoint Generative Models*.
+> [**Midpoint Generative Models**](https://arxiv.org/abs/2605.29920)<br>
+> Daniil Shlenskii\*, Nikita Gushchin\*, Lev Novitskiy, Dmitry V. Dylov, Alexander Korotin<br>
+> *NeurIPS 2026* (\* equal contribution)
+
+One-step MGM training and sampling for the EDM and EDM2 backbones used in the paper.
 
 <p align="center">
   <img src="assets/teaser.png" width="100%" alt="MGM overview: the generator maps noise z to x0; x0 and a data sample x1 are joined by a randomly flipped interpolation, and a vector-valued critic regresses x1 - x0 from the flipped point">
@@ -19,6 +23,16 @@ One-step MGM training and sampling for the EDM and EDM2 backbones used in *Midpo
 The presets reproduce the runs behind the reported FIDs (CIFAR-10 2.27, ImageNet 64×64 2.50, ImageNet 512×512 2.36). Both ImageNet runs added the noise to both interpolants, and the ImageNet 512×512 run used an EMA half-life, unlike the critic-only noise and EMA decay 0.999 listed in Table 3. `scripts/` has one launch script per preset.
 
 All presets use Adam with learning rate 1e-5 and betas (0, 0.999) for both networks, one critic update per generator update, t ~ U[0, 1/2], σ_init = 2.5 and fp32. FID-50k against the EDM/EDM2 reference statistics is evaluated every 100 kimg during the first 1 Mimg, then every 500 kimg, and at the end of training. The generator and the critic are initialized from the same pretrained denoiser; the critic is f(x, t) = D(x, 0.002 + t) − x.
+
+### Training cost
+
+| Preset | GPUs | Training time | Lowest FID reached at |
+| --- | --- | --- | --- |
+| `cifar10` | 2× H100 | ~2 days | ~19.5 Mimg (of 20) |
+| `imagenet64` | 8× H100 | ~3 days | ~14.3 Mimg |
+| `imagenet512` | 8× H100 | ~4 days | ~30.2 Mimg |
+
+Times are those of the paper runs (Appendix C.1) and exclude the initialization: the ImageNet presets start from the public EDM/EDM2 checkpoints, and CIFAR-10 first runs the 50K-kimg warmup. The ImageNet 512×512 run used TF32 matmuls, while the release trains in strict fp32 and therefore takes longer. In forward-pass equivalents of the 56M network, the whole CIFAR-10 pipeline costs 350M (150M warmup + 200M MGM training), the lowest complete post-initialization estimate among the methods compared in Appendix F.
 
 ## Install
 
@@ -101,6 +115,19 @@ python generate_onestep.py --network=runs/cifar10/network-snapshot-020000.pkl \
 ```
 
 EDM and EDM2 snapshots are detected automatically; EDM2 latents are decoded with the SD-VAE. For class-conditional networks the class is random unless `--class` is given.
+
+## Citation
+
+```bibtex
+@inproceedings{shlenskii2026midpoint,
+  title     = {Midpoint Generative Models},
+  author    = {Shlenskii, Daniil and Gushchin, Nikita and Novitskiy, Lev and Dylov, Dmitry V. and Korotin, Alexander},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2026},
+  eprint    = {2605.29920},
+  archivePrefix = {arXiv}
+}
+```
 
 ## Licenses
 
