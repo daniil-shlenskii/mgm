@@ -1,13 +1,37 @@
-# Midpoint Generative Models [[arXiv](https://arxiv.org/abs/2605.29920)] [[NeurIPS 2026](https://neurips.cc/virtual/2026/poster/154433)]
-
-> [**Midpoint Generative Models**](https://arxiv.org/abs/2605.29920)<br>
-> Daniil Shlenskii\*, Nikita Gushchin\*, Lev Novitskiy, Dmitry V. Dylov, Alexander Korotin<br>
-> *NeurIPS 2026* (\* equal contribution)
-
-One-step MGM training and sampling for the EDM and EDM2 backbones used in the paper.
+<h1 align="center">Midpoint Generative Models</h1>
 
 <p align="center">
-  <img src="assets/teaser.png" width="100%" alt="MGM overview: the generator maps noise z to x0; x0 and a data sample x1 are joined by a randomly flipped interpolation, and a vector-valued critic regresses x1 - x0 from the flipped point">
+  We train a one-step generator using flow matching between its own samples and real data.
+</p>
+
+<p align="center">
+  Daniil Shlenskii<sup>*</sup>, Nikita Gushchin<sup>*</sup>, Lev Novitskiy, Dmitry V. Dylov, Alexander Korotin<br>
+  <sub>* Equal contribution</sub>
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/abs/2605.29920">Paper (arXiv)</a> ·
+  <a href="https://neurips.cc/virtual/2026/poster/154433">NeurIPS 2026</a>
+</p>
+
+<p align="center">
+  <img src="assets/teaser.png" width="100%" alt="The generator maps noise to a sample. The critic sees a randomly flipped interpolation and predicts the displacement from the generated sample to the real one.">
+</p>
+
+<p align="center">
+  At the midpoint, the velocity field vanishes exactly when the generated and real distributions match.
+  A random time flip extends this symmetry to other interpolation times.
+</p>
+
+## Results
+
+<p align="center">
+  <img src="assets/imagenet512-samples.png" width="100%" alt="Twelve generated images arranged in two rows, including dogs, otters, geysers, parrots, valleys and arctic foxes."><br>
+  <em>One-step samples on ImageNet 512×512.</em>
+</p>
+
+<p align="center">
+  <strong>FID-50k ↓</strong> · CIFAR-10 <strong>2.27</strong> · ImageNet 64×64 <strong>2.50</strong> · ImageNet 512×512 <strong>2.36</strong>
 </p>
 
 ## Configurations
