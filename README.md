@@ -34,72 +34,61 @@
   <strong>FID-50k ↓</strong> · CIFAR-10 <strong>2.27</strong> · ImageNet 64×64 <strong>2.50</strong> · ImageNet 512×512 <strong>2.36</strong>
 </p>
 
-## Install
+## Quick Start
 
-Requires Python 3.11–3.13 and CUDA GPUs. From this directory:
+Install the environment from the repository root with `uv`. Training and sampling require Python 3.11–3.13 and CUDA.
 
 ```bash
 uv sync
 source .venv/bin/activate
 ```
 
-## Datasets
+### Train on CIFAR-10
 
-CIFAR-10 and ImageNet 64×64 use the EDM dataset format:
+Save the [CIFAR-10 Python archive](https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz) to `downloads/cifar10/cifar-10-python.tar.gz`. The commands below prepare the dataset and start MGM training on two GPUs from NVIDIA’s pretrained EDM checkpoint.
 
 ```bash
 python dataset_tool.py --source=downloads/cifar10/cifar-10-python.tar.gz \
     --dest=datasets/cifar10-32x32.zip
-python dataset_tool.py --source=downloads/imagenet/ILSVRC/Data/CLS-LOC/train \
-    --dest=datasets/imagenet-64x64.zip --resolution=64x64 --transform=center-crop
+
+torchrun --standalone --nproc_per_node=2 train.py --preset=cifar10 \
+    --data=datasets/cifar10-32x32.zip --outdir=runs/cifar10-edm \
+    --checkpoint=https://nvlabs-fi-cdn.nvidia.com/edm/pretrained/edm-cifar10-32x32-uncond-vp.pkl
 ```
 
-ImageNet 512×512 uses the SD-VAE latent dataset of EDM2 (8×64×64 mean/std latents). Build it with the `dataset_tool.py` of [NVlabs/edm2](https://github.com/NVlabs/edm2):
+For the CIFAR-10 initialization used in the paper, see [CIFAR-10 denoising warmup](#cifar-10-denoising-warmup).
+
+### Train on ImageNet
+
+For [ImageNet 64×64](scripts/imagenet64.sh), set `IMAGENET_TRAIN` to the training image directory. For [ImageNet 512×512](scripts/imagenet512.sh), set `DATA` to the SD-VAE latent archive prepared with the [EDM2 dataset tool](https://github.com/NVlabs/edm2/blob/main/dataset_tool.py).
 
 ```bash
-python dataset_tool.py convert --source=downloads/imagenet/ILSVRC/Data/CLS-LOC/train \
-    --dest=datasets/img512.zip --resolution=512x512 --transform=center-crop-dhariwal
-python dataset_tool.py encode --source=datasets/img512.zip --dest=datasets/img512-sd.zip
+# ImageNet 64×64
+IMAGENET_TRAIN=/path/to/imagenet/train bash scripts/imagenet64.sh
+
+# ImageNet 512×512
+DATA=/path/to/img512-sd.zip bash scripts/imagenet512.sh
 ```
 
-Pretrained checkpoints, FID reference statistics, the Inception network and the SD-VAE (`stabilityai/sd-vae-ft-mse`) are downloaded on first use.
+### Generation
+
+After training, generate 16 images from the final CIFAR-10 snapshot. The PNGs are saved to `out/cifar10/`.
+
+```bash
+python generate_onestep.py --network=runs/cifar10-edm/network-snapshot-020000.pkl \
+    --outdir=out/cifar10 --seeds=0-15
+```
 
 ## CIFAR-10 denoising warmup
 
-To skip the warmup and start MGM training directly, pass the URL of NVIDIA's [pretrained unconditional CIFAR-10 DDPM++ checkpoint](https://nvlabs-fi-cdn.nvidia.com/edm/pretrained/edm-cifar10-32x32-uncond-vp.pkl) to `train.py` via `--checkpoint`. To reproduce the paper's CIFAR-10 result (FID-50k 2.27), use the 50K-kimg warmup below.
+For the reported FID-50k of 2.27, we initialized MGM from a DDPM++ denoiser trained on CIFAR-10 for 50,000 kimg. Run the warmup on the prepared dataset with eight GPUs:
 
 ```bash
 torchrun --standalone --nproc_per_node=8 warmup_cifar.py \
-    --data=datasets/cifar10-32x32.zip --outdir=runs/warmup --duration-kimg=50000
+    --data=datasets/cifar10-32x32.zip --outdir=runs/cifar10-warmup --duration-kimg=50000
 ```
 
-This trains DDPM++ with EDM's CIFAR-10 recipe and the folded log-normal noise distribution of Appendix C.3, and saves EMA snapshots `network-snapshot-<kimg>.pkl` at 10K, 20K and 50K kimg (`--duration-kimg=200000` adds 100K and 200K for the warmup ablation). `--resume=runs/warmup` continues from the latest `warmup-state-*.pt`.
-
-## MGM training
-
-```bash
-# CIFAR-10 (20 Mimg = 78,125 iterations at batch 256)
-torchrun --standalone --nproc_per_node=2 train.py --preset=cifar10 \
-    --data=datasets/cifar10-32x32.zip --outdir=runs/cifar10 \
-    --checkpoint=runs/warmup/network-snapshot-050000.pkl
-
-# ImageNet 64x64
-torchrun --standalone --nproc_per_node=8 train.py --preset=imagenet64 \
-    --data=datasets/imagenet-64x64.zip --outdir=runs/imagenet64 --duration=100
-
-# ImageNet 512x512
-torchrun --standalone --nproc_per_node=8 train.py --preset=imagenet512 \
-    --data=datasets/img512-sd.zip --outdir=runs/imagenet512 --duration=100
-```
-
-## Generation
-
-```bash
-python generate_onestep.py --network=runs/cifar10/network-snapshot-020000.pkl \
-    --outdir=out/cifar10 --seeds=0-49999
-```
-
-EDM and EDM2 snapshots are detected automatically; EDM2 latents are decoded with the SD-VAE. For class-conditional networks the class is random unless `--class` is given.
+Use the resulting snapshot as `--checkpoint=runs/cifar10-warmup/network-snapshot-050000.pkl` for MGM training. To run both stages with the paper settings, use [`bash scripts/cifar10.sh`](scripts/cifar10.sh).
 
 ## Training cost
 
@@ -109,7 +98,7 @@ EDM and EDM2 snapshots are detected automatically; EDM2 latents are decoded with
 | `imagenet64` | 8× H100 | ~3 days | ~14.3 Mimg |
 | `imagenet512` | 8× H100 | ~4 days | ~30.2 Mimg |
 
-Times are those of the paper runs (Appendix C.1) and exclude the initialization: the ImageNet presets start from the public EDM/EDM2 checkpoints, and CIFAR-10 first runs the 50K-kimg warmup. The ImageNet 512×512 run used TF32 matmuls, while the release trains in strict fp32 and therefore takes longer. In forward-pass equivalents of the 56M network, the whole CIFAR-10 pipeline costs 350M (150M warmup + 200M MGM training), the lowest complete post-initialization estimate among the methods compared in Appendix F.
+Times cover MGM training after initialization (Appendix C.1). On ImageNet 512×512, the paper run used TF32 and the release uses strict FP32, which takes longer. Appendix F includes the CIFAR-10 warmup in the full compute estimate.
 
 ## Citation
 
