@@ -19,8 +19,8 @@
 </p>
 
 <p align="center">
-  At the midpoint, the Flow Matching velocity vanishes exactly when the generated and real distributions match.
-  A random time flip extends this symmetry to other interpolation times.
+  With linear interpolation, the midpoint velocity field vanishes when the two distributions match.
+  MGM uses a random time flip to extend this symmetry beyond the midpoint.
 </p>
 
 ## Results
@@ -56,7 +56,16 @@ torchrun --standalone --nproc_per_node=2 train.py --preset=cifar10 \
     --checkpoint=https://nvlabs-fi-cdn.nvidia.com/edm/pretrained/edm-cifar10-32x32-uncond-vp.pkl
 ```
 
-For the CIFAR-10 initialization used in the paper, see [CIFAR-10 denoising warmup](#cifar-10-denoising-warmup).
+For the reported CIFAR-10 FID of 2.27, we used the [denoising warmup](#cifar-10-denoising-warmup).
+
+### Generation
+
+After training, generate 16 images from the final CIFAR-10 snapshot. The PNGs are saved to `out/cifar10/`.
+
+```bash
+python generate_onestep.py --network=runs/cifar10-edm/network-snapshot-020000.pkl \
+    --outdir=out/cifar10 --seeds=0-15
+```
 
 ### Train on ImageNet
 
@@ -68,15 +77,6 @@ IMAGENET_TRAIN=/path/to/imagenet/train bash scripts/imagenet64.sh
 
 # ImageNet 512×512
 DATA=/path/to/img512-sd.zip bash scripts/imagenet512.sh
-```
-
-### Generation
-
-After training, generate 16 images from the final CIFAR-10 snapshot. The PNGs are saved to `out/cifar10/`.
-
-```bash
-python generate_onestep.py --network=runs/cifar10-edm/network-snapshot-020000.pkl \
-    --outdir=out/cifar10 --seeds=0-15
 ```
 
 ## CIFAR-10 denoising warmup
