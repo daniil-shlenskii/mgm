@@ -1,0 +1,19 @@
+__pycache__/
+.DS_Store
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# Datasets, checkpoints and outputs
+*.png
+*.npz
+*.pt
+*.pkl
+*.pth
+!assets/*.png
+*.tar.gz
+*.zip
+runs/
+out/
+datasets/
+downloads/
