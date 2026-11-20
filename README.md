@@ -2,6 +2,10 @@
 
 One-step MGM training and sampling for the EDM and EDM2 backbones used in *Midpoint Generative Models*.
 
+<p align="center">
+  <img src="assets/teaser.png" width="100%" alt="MGM overview: the generator maps noise z to x0; x0 and a data sample x1 are joined by a randomly flipped interpolation, and a vector-valued critic regresses x1 - x0 from the flipped point">
+</p>
+
 ## Configurations
 
 `train.py --preset` selects one of the configurations of the paper:
